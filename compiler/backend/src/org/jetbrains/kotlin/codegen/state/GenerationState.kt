@@ -39,7 +39,6 @@ import org.jetbrains.kotlin.resolve.*
 import org.jetbrains.kotlin.resolve.deprecation.CoroutineCompatibilitySupport
 import org.jetbrains.kotlin.resolve.deprecation.DeprecationResolver
 import org.jetbrains.kotlin.resolve.diagnostics.Diagnostics
-import org.jetbrains.kotlin.resolve.diagnostics.PrecomputedSuppressCache
 import org.jetbrains.kotlin.resolve.jvm.JvmClassName
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOriginKind.*
@@ -179,11 +178,7 @@ class GenerationState private constructor(
     }
 
     val extraJvmDiagnosticsTrace: BindingTrace =
-        DelegatingBindingTrace(
-            originalFrontendBindingContext, "For extra diagnostics in ${this::class.java}", false,
-            customSuppressCache = if (isIrBackend) PrecomputedSuppressCache(originalFrontendBindingContext, files) else null,
-        )
-
+        DelegatingBindingTrace(originalFrontendBindingContext, "For extra diagnostics in ${this::class.java}", false)
     private val interceptedBuilderFactory: ClassBuilderFactory
     private var used = false
 

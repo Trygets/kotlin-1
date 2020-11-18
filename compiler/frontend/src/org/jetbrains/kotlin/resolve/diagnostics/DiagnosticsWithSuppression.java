@@ -23,19 +23,20 @@ import kotlin.collections.CollectionsKt;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.TestOnly;
 import org.jetbrains.kotlin.diagnostics.Diagnostic;
+import org.jetbrains.kotlin.resolve.BindingContext;
 
 import java.util.Collection;
 import java.util.Iterator;
 
 public class DiagnosticsWithSuppression implements Diagnostics {
-    private final KotlinSuppressCache suppressCache;
+    private final KotlinSuppressCache kotlinSuppressCache;
     private final Collection<Diagnostic> diagnostics;
     private final DiagnosticsElementsCache elementsCache;
 
-    public DiagnosticsWithSuppression(@NotNull KotlinSuppressCache suppressCache, @NotNull Collection<Diagnostic> diagnostics) {
+    public DiagnosticsWithSuppression(@NotNull BindingContext context, @NotNull Collection<Diagnostic> diagnostics) {
         this.diagnostics = diagnostics;
-        this.suppressCache = suppressCache;
-        this.elementsCache = new DiagnosticsElementsCache(this, suppressCache.getFilter());
+        this.kotlinSuppressCache = new BindingContextSuppressCache(context);
+        this.elementsCache = new DiagnosticsElementsCache(this, kotlinSuppressCache.getFilter());
     }
 
     @NotNull
@@ -47,13 +48,13 @@ public class DiagnosticsWithSuppression implements Diagnostics {
     @NotNull
     @Override
     public Iterator<Diagnostic> iterator() {
-        return new FilteringIterator<>(diagnostics.iterator(), suppressCache.getFilter()::invoke);
+        return new FilteringIterator<>(diagnostics.iterator(), kotlinSuppressCache.getFilter()::invoke);
     }
 
     @NotNull
     @Override
     public Collection<Diagnostic> all() {
-        return CollectionsKt.filter(diagnostics, suppressCache.getFilter());
+        return CollectionsKt.filter(diagnostics, kotlinSuppressCache.getFilter());
     }
 
     @NotNull

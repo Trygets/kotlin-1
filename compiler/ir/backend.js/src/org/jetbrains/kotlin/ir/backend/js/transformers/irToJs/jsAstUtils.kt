@@ -198,25 +198,45 @@ fun translateCall(
     }
 }
 
-fun translateCallArguments(expression: IrMemberAccessExpression<*>, context: JsGenerationContext, transformer: IrElementToJsExpressionTransformer): List<JsExpression> {
+fun translateCallArguments(
+    expression: IrMemberAccessExpression<*>,
+    context: JsGenerationContext,
+    transformer: IrElementToJsExpressionTransformer,
+): List<JsExpression> {
     val size = expression.valueArgumentsCount
 
-    val arguments = (0 until size).mapTo(ArrayList(size)) { index ->
-        val argument = expression.getValueArgument(index)
-        val result = argument?.accept(transformer, context)
-        if (result == null) {
-            if (context.staticContext.backendContext.es6mode) return@mapTo JsPrefixOperation(JsUnaryOperator.VOID, JsIntLiteral(2))
+    val arguments = (0 until size)
+        .mapTo(ArrayList(size)) { index ->
+            val argument = expression.getValueArgument(index)
+            argument?.accept(transformer, context)
+        }
+        .dropLastWhile { result ->
+            when {
+                result != null -> false
+                context.staticContext.backendContext.es6mode -> false
+                else -> {
+                    assert(expression.validWithNullArgs())
+                    true
+                }
+            }
+        }
+        .map { result ->
+            if (result == null) {
+                if (context.staticContext.backendContext.es6mode) return@map JsPrefixOperation(JsUnaryOperator.VOID, JsIntLiteral(2))
 
-            assert(expression is IrFunctionAccessExpression && expression.symbol.owner.isExternalOrInheritedFromExternal())
-            JsPrefixOperation(JsUnaryOperator.VOID, JsIntLiteral(1))
-        } else
-            result
-    }
+                assert(expression.validWithNullArgs())
+                JsPrefixOperation(JsUnaryOperator.VOID, JsIntLiteral(1))
+            } else
+                result
+        }
 
     return if (expression.symbol.isSuspend) {
         arguments + context.continuation
     } else arguments
 }
+
+private fun IrMemberAccessExpression<*>.validWithNullArgs() =
+    this is IrFunctionAccessExpression && symbol.owner.isExternalOrInheritedFromExternal()
 
 fun JsStatement.asBlock() = this as? JsBlock ?: JsBlock(this)
 

@@ -145,11 +145,11 @@ internal fun IrFunction.shouldContainSuspendMarkers(): Boolean = !isInvokeSuspen
         origin != JvmLoweredDeclarationOrigin.JVM_OVERLOADS_WRAPPER &&
         origin != JvmLoweredDeclarationOrigin.SYNTHETIC_ACCESSOR &&
         origin != JvmLoweredDeclarationOrigin.SYNTHETIC_ACCESSOR_FOR_HIDDEN_CONSTRUCTOR &&
-        origin != JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE &&
-        origin != JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE_TO_SYNTHETIC &&
+        origin != JvmLoweredDeclarationOrigin.SUPER_INTERFACE_METHOD_BRIDGE &&
         origin != IrDeclarationOrigin.BRIDGE &&
         origin != IrDeclarationOrigin.BRIDGE_SPECIAL &&
         origin != IrDeclarationOrigin.DELEGATED_MEMBER &&
+        parentAsClass.origin != JvmLoweredDeclarationOrigin.DEFAULT_IMPLS &&
         !isMultifileBridge() &&
         !isInvokeOfSuspendCallableReference() &&
         !isBridgeToSuspendImplMethod() &&

@@ -12,6 +12,7 @@ import org.jetbrains.kotlin.diagnostics.DiagnosticFactory1
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.descriptors.toIrBasedDescriptor
 import org.jetbrains.kotlin.ir.util.isFakeOverride
+import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.*
 import org.jetbrains.kotlin.utils.SmartSet
 import org.jetbrains.org.objectweb.asm.Type
@@ -179,8 +180,7 @@ class JvmSignatureClashDetector(
             IrDeclarationOrigin.BRIDGE_SPECIAL,
             IrDeclarationOrigin.IR_BUILTINS_STUB,
             JvmLoweredDeclarationOrigin.TO_ARRAY,
-            JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE,
-            JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE_TO_SYNTHETIC,
+            JvmLoweredDeclarationOrigin.SUPER_INTERFACE_METHOD_BRIDGE,
         )
 
         val PREDEFINED_SIGNATURES = listOf(

@@ -162,14 +162,9 @@ class JvmCachedDeclarations(
                 //
                 // is supposed to allow using `I2.DefaultImpls.f` as if it was inherited from `I1.DefaultImpls`.
                 // The classes are not actually related and `I2.DefaultImpls.f` is not a fake override but a bridge.
-                origin = when {
-                    !forCompatibilityMode && !interfaceFun.isFakeOverride ->
-                        interfaceFun.origin
-                    interfaceFun.resolveFakeOverride()!!.origin.isSynthetic ->
-                        JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE_TO_SYNTHETIC
-                    else ->
-                        JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE
-                },
+                origin =
+                if (!forCompatibilityMode && !interfaceFun.isFakeOverride) interfaceFun.origin
+                else interfaceFun.resolveFakeOverride()!!.origin,
                 // Old backend doesn't generate ACC_FINAL on DefaultImpls methods.
                 modality = Modality.OPEN,
 
@@ -217,7 +212,7 @@ class JvmCachedDeclarations(
             assert(fakeOverride.isFakeOverride)
             val irClass = fakeOverride.parentAsClass
             context.irFactory.buildFun {
-                origin = JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE
+                origin = JvmLoweredDeclarationOrigin.SUPER_INTERFACE_METHOD_BRIDGE
                 name = fakeOverride.name
                 visibility = fakeOverride.visibility
                 modality = fakeOverride.modality

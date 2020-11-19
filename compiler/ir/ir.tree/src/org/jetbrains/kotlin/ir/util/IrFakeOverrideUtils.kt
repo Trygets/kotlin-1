@@ -31,17 +31,13 @@ val IrFunction.target: IrFunction get() = when (this) {
 }
 
 fun IrSimpleFunction.collectRealOverrides(
-    toSkip: (IrSimpleFunction) -> Boolean = { false },
     filter: (IrOverridableMember) -> Boolean = { false }
 ): Set<IrSimpleFunction> {
-    if (isReal && !toSkip(this)) return setOf(this)
+    if (isReal) return setOf(this)
 
     return this.overriddenSymbols
         .map { it.owner }
-        .collectAndFilterRealOverrides {
-            require(it is IrSimpleFunction) { "Expected IrSimpleFunction: ${it.render()}" }
-            toSkip(it) || filter(it)
-        }
+        .collectAndFilterRealOverrides(filter)
         .map { it as IrSimpleFunction }
         .toSet()
 }
@@ -87,13 +83,13 @@ fun Collection<IrOverridableMember>.collectAndFilterRealOverrides(toSkip: (IrOve
 }
 
 // TODO: use this implementation instead of any other
-fun IrSimpleFunction.resolveFakeOverride(allowAbstract: Boolean = false, toSkip: (IrSimpleFunction) -> Boolean = { false }): IrSimpleFunction? {
+fun IrSimpleFunction.resolveFakeOverride(allowAbstract: Boolean = false): IrSimpleFunction? {
     return if (allowAbstract) {
-        val reals = collectRealOverrides(toSkip)
+        val reals = collectRealOverrides()
         if (reals.isEmpty()) error("No real overrides for ${this.render()}")
         reals.first()
     } else {
-        collectRealOverrides(toSkip, { it.modality == Modality.ABSTRACT })
+        collectRealOverrides { it.modality == Modality.ABSTRACT }
             .let { realOverrides ->
                 // Kotlin forbids conflicts between overrides, but they may trickle down from Java.
                 realOverrides.singleOrNull { it.parent.safeAs<IrClass>()?.isInterface != true }

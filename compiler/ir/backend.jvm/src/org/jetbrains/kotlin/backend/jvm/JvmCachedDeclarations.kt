@@ -164,11 +164,7 @@ class JvmCachedDeclarations(
                 // The classes are not actually related and `I2.DefaultImpls.f` is not a fake override but a bridge.
                 origin = when {
                     !forCompatibilityMode && !interfaceFun.isFakeOverride ->
-                        when {
-                            interfaceFun.origin == IrDeclarationOrigin.FUNCTION_FOR_DEFAULT_PARAMETER -> interfaceFun.origin
-                            interfaceFun.origin.isSynthetic -> JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_WITH_MOVED_RECEIVERS_SYNTHETIC
-                            else -> JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_WITH_MOVED_RECEIVERS
-                        }
+                        interfaceFun.origin
                     interfaceFun.resolveFakeOverride()!!.origin.isSynthetic ->
                         JvmLoweredDeclarationOrigin.DEFAULT_IMPLS_BRIDGE_TO_SYNTHETIC
                     else ->

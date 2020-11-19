@@ -156,7 +156,7 @@ abstract class KotlinSuppressCache {
 
         // We only add strings and skip other values to facilitate recovery in presence of erroneous code
         for (arrayValue in annotationDescriptor.allValueArguments.values) {
-            if (arrayValue is ArrayValue) {
+            if ((arrayValue is ArrayValue)) {
                 for (value in arrayValue.value) {
                     if (value is StringValue) {
                         builder.add(value.value.toLowerCase())
@@ -175,9 +175,7 @@ abstract class KotlinSuppressCache {
     }
 
     private abstract class Suppressor {
-        open fun isSuppressed(diagnostic: Diagnostic): Boolean =
-            isSuppressed(getDiagnosticSuppressKey(diagnostic), diagnostic.severity)
-
+        abstract fun isSuppressed(diagnostic: Diagnostic): Boolean
         abstract fun isSuppressed(suppressionKey: String, severity: Severity): Boolean
 
         // true is \forall x. other.isSuppressed(x) -> this.isSuppressed(x)
@@ -187,10 +185,14 @@ abstract class KotlinSuppressCache {
     private object EmptySuppressor : Suppressor() {
         override fun isSuppressed(diagnostic: Diagnostic): Boolean = false
         override fun isSuppressed(suppressionKey: String, severity: Severity): Boolean = false
-        override fun dominates(other: Suppressor): Boolean = this === other
+        override fun dominates(other: Suppressor): Boolean = other is EmptySuppressor
     }
 
     private class SingularSuppressor(private val string: String) : Suppressor() {
+        override fun isSuppressed(diagnostic: Diagnostic): Boolean {
+            return isSuppressed(getDiagnosticSuppressKey(diagnostic), diagnostic.severity)
+        }
+
         override fun isSuppressed(suppressionKey: String, severity: Severity): Boolean {
             return isSuppressedByStrings(suppressionKey, ImmutableSet.of(string), severity)
         }
@@ -201,6 +203,10 @@ abstract class KotlinSuppressCache {
     }
 
     private class MultiSuppressor(private val strings: Set<String>) : Suppressor() {
+        override fun isSuppressed(diagnostic: Diagnostic): Boolean {
+            return isSuppressed(getDiagnosticSuppressKey(diagnostic), diagnostic.severity)
+        }
+
         override fun isSuppressed(suppressionKey: String, severity: Severity): Boolean {
             return isSuppressedByStrings(suppressionKey, strings, severity)
         }

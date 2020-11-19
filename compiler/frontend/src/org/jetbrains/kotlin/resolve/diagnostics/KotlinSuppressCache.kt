@@ -111,7 +111,7 @@ abstract class KotlinSuppressCache {
 
        This way we need no more lookups than the number of suppress() annotations from here to the root.
      */
-    private fun isSuppressedByAnnotated(suppressionKey: String, severity: Severity, annotated: KtAnnotated, debugDepth: Int): Boolean {
+    protected fun isSuppressedByAnnotated(suppressionKey: String, severity: Severity, annotated: KtAnnotated, debugDepth: Int): Boolean {
         val suppressor = getOrCreateSuppressor(annotated)
         if (suppressor.isSuppressed(suppressionKey, severity)) return true
 
@@ -120,7 +120,7 @@ abstract class KotlinSuppressCache {
         val suppressed = isSuppressedByAnnotated(suppressionKey, severity, annotatedAbove, debugDepth + 1)
         val suppressorAbove = suppressors[annotatedAbove]
         if (suppressorAbove != null && suppressorAbove.dominates(suppressor)) {
-            suppressors[annotated] = suppressorAbove
+            suppressors.put(annotated, suppressorAbove)
         }
 
         return suppressed
@@ -244,8 +244,11 @@ class BindingContextSuppressCache(val context: BindingContext) : KotlinSuppressC
     override fun getSuppressionAnnotations(annotated: KtAnnotated): List<AnnotationDescriptor> {
         val descriptor = context.get(BindingContext.DECLARATION_TO_DESCRIPTOR, annotated)
 
-        return descriptor?.annotations?.toList()
-            ?: annotated.annotationEntries.mapNotNull { context.get(BindingContext.ANNOTATION, it) }
+        return if (descriptor != null) {
+            descriptor.annotations.toList()
+        } else {
+            annotated.annotationEntries.mapNotNull { context.get(BindingContext.ANNOTATION, it) }
+        }
     }
 
     override fun isSuppressedByExtension(suppressor: DiagnosticSuppressor, diagnostic: Diagnostic): Boolean {
